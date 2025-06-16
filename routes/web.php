@@ -15,24 +15,24 @@ Route::middleware([
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+});
 
-    Route::resource('rest', RestTestController::class)->names('restTest');
-    Route::group([
-        'namespace' => 'App\Http\Controllers\Blog', // Визначаємо namespace для контролерів
-        'prefix'    => 'blog' // Додаємо префікс 'blog' до URL-ів
-    ], function () {
-        Route::resource('posts', PostController::class)->names('blog.posts');
-    });
-    //Адмінка
-    $groupData = [
-        'namespace' => 'App\Http\Controllers\Blog\Admin',
-        'prefix' => 'admin/blog',
-    ];
-    Route::group($groupData, function () {
-        //BlogCategory
-        $methods = ['index', 'edit', 'store', 'update', 'create'];
-        Route::resource('categories', CategoryController::class)
-            ->only($methods)
-            ->names('blog.admin.categories');
-    });
+Route::resource('rest', RestTestController::class)->names('restTest');
+
+Route::group([
+    'namespace' => 'App\Http\Controllers\Blog',
+    'prefix'    => 'blog' //
+], function () {
+    Route::resource('posts', PostController::class)->names('blog.posts');
+});
+
+$groupData = [
+    'namespace' => 'App\Http\Controllers\Blog\Admin',
+    'prefix' => 'admin/blog',
+];
+Route::group($groupData, function () {
+    $methods = ['index', 'edit', 'store', 'update', 'create'];
+    Route::resource('categories', CategoryController::class)
+        ->only($methods)
+        ->names('blog.admin.categories');
 });
