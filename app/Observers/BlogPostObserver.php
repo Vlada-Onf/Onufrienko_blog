@@ -31,11 +31,10 @@ class BlogPostObserver
     {
         $this->setPublishedAt($blogPost);
         $this->setSlug($blogPost);
-
-        // Встановлюємо user_id при створенні посту
+        $this->setHtml($blogPost);
+        $this->setUser($blogPost);
         if (empty($blogPost->user_id)) {
-            $blogPost->user_id = auth()->id() ?? 1; // Використовуємо ID поточного авторизованого користувача, або 1 за замовчуванням
-        }
+            $blogPost->user_id = auth()->id() ?? 1;}
     }
 
 

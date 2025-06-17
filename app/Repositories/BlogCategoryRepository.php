@@ -69,12 +69,13 @@ class BlogCategoryRepository extends CoreRepository
     }
     public function getAllWithPaginate($perPage = null)
     {
-        $columns = ['id', 'title', 'parent_id']; // Вибираємо тільки необхідні стовпці
+        $columns = ['id', 'title', 'parent_id'];
 
         $result = $this
             ->startConditions()
-            ->select($columns) // Вибираємо конкретні стовпці
-            ->paginate($perPage); // Застосовуємо пагінацію
+            ->select($columns)
+            ->with(['parentCategory:id,title']) // Додано жадібне завантаження для parentCategory
+            ->paginate($perPage);
 
         return $result;
     }

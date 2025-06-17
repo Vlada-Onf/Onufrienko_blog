@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Blog\Admin;
 
 use App\Repositories\BlogPostRepository;
+use App\Models\BlogPost;
+use App\Http\Requests\BlogPostCreateRequest;
 use Illuminate\Http\Request;
 use App\Repositories\BlogCategoryRepository;
 use App\Http\Requests\BlogPostUpdateRequest;
 use Illuminate\Support\Str;
-use App\Models\BlogPost;
-use App\Http\Requests\BlogPostCreateRequest;
 
 class PostController extends BaseController
 {
@@ -40,21 +40,19 @@ class PostController extends BaseController
      */
     public function create()
     {
-        $item = new BlogPost();
-        $categoryList = $this->blogCategoryRepository->getForComboBox();
+        $item = new BlogPost(); // Створюємо новий порожній об'єкт BlogPost
+        $categoryList = $this->blogCategoryRepository->getForComboBox(); // Отримуємо список категорій для випадаючого списку
 
-        return view('blog.admin.posts.edit', compact('item', 'categoryList'));
+        return view('blog.admin.posts.edit', compact('item', 'categoryList')); // Використовуємо той самий шаблон edit.blade.php
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(BlogPostCreateRequest $request)
+    public function store(BlogPostCreateRequest $request) // Змінено тип $request
     {
         $data = $request->input();
-
         $item = (new BlogPost())->create($data);
-
         if ($item) {
             return redirect()
                 ->route('blog.admin.posts.edit', [$item->id])
@@ -65,7 +63,6 @@ class PostController extends BaseController
                 ->withInput();
         }
     }
-
     /**
      * Display the specified resource.
      */
@@ -120,9 +117,9 @@ class PostController extends BaseController
      */
     public function destroy(string $id)
     {
-        $result = BlogPost::destroy($id);
+        $result = BlogPost::destroy($id); // Використовуємо soft delete, запис лишається в БД, але позначається як видалений
 
-        // $result = BlogPost::find($id)->forceDelete();
+        // $result = BlogPost::find($id)->forceDelete(); // Повне видалення з БД (для використання, якщо потрібне жорстке видалення)
 
         if ($result) {
             return redirect()
@@ -132,6 +129,5 @@ class PostController extends BaseController
             return back()
                 ->withErrors(['msg' => 'Помилка видалення']);
         }
-
     }
 }
