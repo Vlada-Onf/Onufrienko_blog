@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use App\Repositories\BlogCategoryRepository;
 use App\Http\Requests\BlogPostUpdateRequest;
 use Illuminate\Support\Str;
+use App\Jobs\BlogPostAfterCreateJob;
+use App\Jobs\BlogPostAfterDeleteJob;
 
 class PostController extends BaseController
 {
@@ -54,10 +56,14 @@ class PostController extends BaseController
         $data = $request->input();
         $item = (new BlogPost())->create($data);
         if ($item) {
+            // Відправляємо Job в чергу після успішного створення посту
+            $job = new BlogPostAfterCreateJob($item);
+            $this->dispatch($job); // Або dispatch($job); без $this
+
             return redirect()
                 ->route('blog.admin.posts.edit', [$item->id])
-                ->with(['success' => 'Успішно збережено']);
-        } else {
+                ->with(['success' => 'Успішно збережено']);}
+        else {
             return back()
                 ->withErrors(['msg' => 'Помилка збереження'])
                 ->withInput();
@@ -122,6 +128,9 @@ class PostController extends BaseController
         // $result = BlogPost::find($id)->forceDelete(); // Повне видалення з БД (для використання, якщо потрібне жорстке видалення)
 
         if ($result) {
+            // Відправляємо Job в чергу після успішного видалення посту, з затримкою 20 секунд
+            BlogPostAfterDeleteJob::dispatch($id)->delay(20);
+
             return redirect()
                 ->route('blog.admin.posts.index')
                 ->with(['success' => "Запис id[$id] видалено"]);
