@@ -3,26 +3,13 @@
 namespace App\Observers;
 
 use App\Models\BlogPost;
-use Carbon\Carbon; // Додано
-use Illuminate\Support\Str; // Додано
+use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class BlogPostObserver
 {
     /**
-     * Обробка події "updating" (перед оновленням) запису.
-     *
-     * @param  BlogPost  $blogPost
-     * @return void
-     */
-    public function updating(BlogPost $blogPost): void
-    {
-        $this->setPublishedAt($blogPost);
-        $this->setSlug($blogPost);
-    }
-
-    /**
      * Обробка події "creating" (перед створенням) запису.
-     * Цей метод додаємо, щоб логіка застосовувалась і при створенні нового посту.
      *
      * @param  BlogPost  $blogPost
      * @return void
@@ -33,11 +20,20 @@ class BlogPostObserver
         $this->setSlug($blogPost);
         $this->setHtml($blogPost);
         $this->setUser($blogPost);
-        if (empty($blogPost->user_id)) {
-            $blogPost->user_id = auth()->id() ?? 1;}
     }
 
-
+    /**
+     * Обробка події "updating" (перед оновленням) запису.
+     *
+     * @param  BlogPost  $blogPost
+     * @return void
+     */
+    public function updating(BlogPost $blogPost): void
+    {
+        $this->setPublishedAt($blogPost);
+        $this->setSlug($blogPost);
+        $this->setHtml($blogPost);
+    }
     /**
      * Якщо поле published_at порожнє і is_published є true,
      * то генеруємо поточну дату.
@@ -64,5 +60,30 @@ class BlogPostObserver
         if (empty($blogPost->slug)) {
             $blogPost->slug = Str::slug($blogPost->title);
         }
+    }
+
+    /**
+     * Встановлюємо значення полю content_html з поля content_raw.
+     *
+     * @param BlogPost $blogPost
+     * @return void
+     */
+    protected function setHtml(BlogPost $blogPost): void
+    {
+        if ($blogPost->isDirty('content_raw')) {
+            $blogPost->content_html = $blogPost->content_raw;
+        }
+    }
+
+    /**
+     * Якщо user_id не вказано, то встановимо юзера 1.
+     *
+     * @param BlogPost $blogPost
+     * @return void
+     */
+    protected function setUser(BlogPost $blogPost): void
+    {
+        $blogPost->user_id = auth()->id() ?? BlogPost::UNKNOWN_USER;
+
     }
 }

@@ -42,23 +42,21 @@ class PostController extends BaseController
      */
     public function create()
     {
-        $item = new BlogPost(); // Створюємо новий порожній об'єкт BlogPost
-        $categoryList = $this->blogCategoryRepository->getForComboBox(); // Отримуємо список категорій для випадаючого списку
+        $item = new BlogPost();
+        $categoryList = $this->blogCategoryRepository->getForComboBox();
 
-        return view('blog.admin.posts.edit', compact('item', 'categoryList')); // Використовуємо той самий шаблон edit.blade.php
-    }
+        return view('blog.admin.posts.edit', compact('item', 'categoryList')); }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(BlogPostCreateRequest $request) // Змінено тип $request
+    public function store(BlogPostCreateRequest $request)
     {
         $data = $request->input();
         $item = (new BlogPost())->create($data);
         if ($item) {
-            // Відправляємо Job в чергу після успішного створення посту
             $job = new BlogPostAfterCreateJob($item);
-            $this->dispatch($job); // Або dispatch($job); без $this
+            dispatch($job);
 
             return redirect()
                 ->route('blog.admin.posts.edit', [$item->id])
