@@ -13,34 +13,24 @@ class GenerateCatalogMainJob extends AbstractJob
     public function handle()
     {
         $this->debug('start');
-
-        // Спочатку кешуємо продукти (виконується синхронно, без черги)
-        // Використання dispatchNow() означає негайне виконання, не додаючи в чергу.
-        GenerateCatalogCacheJob::dispatchSync(); // Змінено на dispatchSync() для негайного виконання
-
-        // Створюємо ланцюг завдань формування файлів з цінами
+        
+        GenerateCatalogCacheJob::dispatchSync();
         $chainPrices = $this->getChainPrices();
 
-        // Основні підзавдання
         $chainMain = [
-            new GenerateCategoriesJob, // Генерація категорій
-            new GenerateDeliveriesJob, // Генерація способів доставок
-            new GeneratePointsJob,     // Генерація пунктів видачі
+            new GenerateCategoriesJob,
+            new GenerateDeliveriesJob,
+            new GeneratePointsJob,
         ];
 
-        // Підзавдання, які мають виконуватися останніми
         $chainLast = [
-            // Архівування файлів і перенесення архіву в публічний каталог
             new ArchiveUploadsJob,
-            // Відправка повідомлення зовнішньому сервісу про те, що можна завантажувати новий файл каталога товарів
+
             new SendPriceRequestJob,
         ];
-
-        // Об'єднуємо всі ланцюги
         $chain = array_merge($chainPrices, $chainMain, $chainLast);
 
-        // Запускаємо перший Job з ланцюгом наступних
-        GenerateGoodsFileJob::withChain($chain)->dispatch(); // Correct usage for chaining
+        GenerateGoodsFileJob::withChain($chain)->dispatch();
 
         $this->debug('finish');
     }
@@ -53,11 +43,9 @@ class GenerateCatalogMainJob extends AbstractJob
     private function getChainPrices(): array
     {
         $result = [];
-        // Імітуємо продукти, які потрібно розбити на фрагменти
-        $products = collect([101, 102, 103, 104, 105, 106, 107, 108, 109, 110]); // Більше продуктів для кращої демонстрації
+        $products = collect([101, 102, 103, 104, 105, 106, 107, 108, 109, 110]);
         $fileNum = 1;
 
-        // Розбиваємо продукти на фрагменти по 2 елементи
         foreach ($products->chunk(2) as $chunk) {
             $result[] = new GeneratePricesFileChunkJob($chunk, $fileNum);
             $fileNum++;
